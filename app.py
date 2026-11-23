@@ -18,6 +18,7 @@ DEVELOPER_NAME = "Hussnain Khalid"
 
 st.set_page_config(page_title=f"SkinSense AI - by {DEVELOPER_NAME}", page_icon="👁️", layout="centered")
 
+# --- SESSION STATE - SAB KUCH YAHAN SE CONTROL HOGA ---
 if "uploader_key" not in st.session_state:
     st.session_state.uploader_key = 0
 if "use_sample" not in st.session_state:
@@ -32,6 +33,8 @@ if "conf" not in st.session_state:
     st.session_state.conf = 0
 if "risk" not in st.session_state:
     st.session_state.risk = ""
+if "show_download" not in st.session_state:
+    st.session_state.show_download = False
 
 SAMPLE_URL = "https://upload.wikimedia.org/wikipedia/commons/5/5d/Melanoma_in_situ.jpg"
 
@@ -43,7 +46,9 @@ def load_sample_image():
         img = Image.new("RGB", (400, 400), color=(180, 120, 90))
         return img
 
-# --- PROFESSIONAL PDF - REAL JESI ---
+# =====================================================
+# --- PROFESSIONAL PDF REPORT - BILKUL REAL JESI ---
+# =====================================================
 def create_pdf_report(result, confidence, risk):
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=A4, topMargin=0, bottomMargin=0, leftMargin=0, rightMargin=0)
@@ -182,6 +187,7 @@ def create_pdf_report(result, confidence, risk):
     buffer.seek(0)
     return buffer
 
+# --- APP DESIGN ---
 st.markdown("""
 <style>
     .main { background-color: #F8FAFC; }
@@ -252,12 +258,14 @@ with eb1:
         st.session_state.use_sample = True
         st.session_state.show_how = False
         st.session_state.analysis_done = False
+        st.session_state.show_download = False
         st.rerun()
 with eb2:
     if st.button("🗑️ Clear Image", use_container_width=True):
         st.session_state.use_sample = False
         st.session_state.show_how = False
         st.session_state.analysis_done = False
+        st.session_state.show_download = False
         st.session_state.uploader_key += 1
         st.rerun()
 with eb3:
@@ -306,9 +314,10 @@ if image is not None:
             st.session_state.risk = "Low"
             st.session_state.pred_value = float(1 - prediction)
         st.session_state.analysis_done = True
+        st.session_state.show_download = False
         st.rerun()
 
-    # --- AB SIRF EK HI BUTTON HOGA ---
+    # --- RESULT + DOWNLOAD - AB AUTO DOWNLOAD NAHI HOGA ---
     if st.session_state.analysis_done:
         st.markdown("---")
         result = st.session_state.result
@@ -327,9 +336,18 @@ if image is not None:
             st.info("Good news! It looks Benign. Please still consult a doctor for confirmation.")
 
         st.markdown("---")
-        # SIRF YE EK BUTTON - GENERATE WALA KHATAM
-        pdf_buffer = create_pdf_report(result, conf, risk)
-        st.download_button("⬇️ Download PDF Report", data=pdf_buffer, file_name="SkinSense_Report.pdf", mime="application/pdf", use_container_width=True)
+
+        # STEP 1: Ye sirf normal button hai, is se file download NAHI hogi
+        if not st.session_state.show_download:
+            if st.button("⬇️ Download PDF Report", use_container_width=True):
+                st.session_state.show_download = True
+                st.rerun()
+
+        # STEP 2: Ab asli download button aayega, is ko dabao ge tabhi file download hogi
+        if st.session_state.show_download:
+            pdf_buffer = create_pdf_report(result, conf, risk)
+            st.success("PDF Ready hai! Ab neeche wale button ko dabao, tabhi file download hogi 👇")
+            st.download_button("✅ Click Here to Save PDF", data=pdf_buffer, file_name="SkinSense_Report.pdf", mime="application/pdf", use_container_width=True)
 
 st.markdown(f"""
 <div style="background:#FFFBEB; padding:12px; border-radius:12px; margin-top:20px; text-align:center; font-size:12px; color:#92400E;">
