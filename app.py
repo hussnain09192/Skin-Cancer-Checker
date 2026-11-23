@@ -5,57 +5,68 @@ import numpy as np
 import io
 from datetime import datetime
 
-# For PDF Report
-from reportlab.lib.pagesizes import A4
-from reportlab.pdfgen import canvas
-from reportlab.lib.colors import HexColor
-
 st.set_page_config(page_title="SkinSense AI - Skin Cancer Detector", page_icon="👁️", layout="centered")
 
+# --- PDF WITHOUT ANY LIBRARY - NO REPORTLAB NEEDED ---
 def create_pdf_report(result, confidence, risk):
-    buffer = io.BytesIO()
-    c = canvas.Canvas(buffer, pagesize=A4)
-    w, h = A4
-    # Header
-    c.setFillColor(HexColor("#0F766E"))
-    c.rect(0, h-110, w, 110, fill=1, stroke=0)
-    c.setFillColor(HexColor("#FFFFFF"))
-    c.setFont("Helvetica-Bold", 26)
-    c.drawString(40, h-55, "SkinSense AI")
-    c.setFont("Helvetica", 11)
-    c.drawString(40, h-80, "Early Skin Cancer Detection Report")
-    c.setFont("Helvetica", 9)
-    c.drawString(40, h-98, f"Date: {datetime.now().strftime('%d %B %Y, %I:%M %p')}")
-    # Body
-    c.setFillColor(HexColor("#0F172A"))
-    c.setFont("Helvetica-Bold", 16)
-    c.drawString(40, h-160, "Prediction Result")
-    c.setFont("Helvetica", 13)
-    if result == "Malignant":
-        c.setFillColor(HexColor("#DC2626"))
-    else:
-        c.setFillColor(HexColor("#16A34A"))
-    c.setFont("Helvetica-Bold", 22)
-    c.drawString(40, h-195, f"{result.upper()}")
-    c.setFillColor(HexColor("#334155"))
-    c.setFont("Helvetica", 12)
-    c.drawString(40, h-230, f"Confidence: {confidence:.2f}%")
-    c.drawString(40, h-255, f"Risk Level: {risk}")
-    c.drawString(40, h-280, "Model: CNN  |  Input: 128 x 128  |  Classes: Benign / Malignant")
-    c.setFont("Helvetica-Bold", 13)
-    c.drawString(40, h-320, "Recommendation:")
-    c.setFont("Helvetica", 11)
-    if result == "Malignant":
-        c.drawString(40, h-340, "Please consult a Dermatologist immediately for further examination.")
-    else:
-        c.drawString(40, h-340, "Looks Benign. Still consult a doctor for final confirmation.")
-    c.setFont("Helvetica", 9)
-    c.setFillColor(HexColor("#94A3B8"))
-    c.drawString(40, 50, "Disclaimer: This is an AI screening tool for educational purposes only. Not a final medical diagnosis.")
-    c.drawString(40, 35, "SkinSense AI | Final Year Project")
-    c.save()
-    buffer.seek(0)
-    return buffer
+    # Simple PDF banane ka tareeka - koi install nahi chahiye
+    date_str = datetime.now().strftime('%d %B %Y, %I:%M %p')
+    advice = "Please consult a Dermatologist immediately." if result == "Malignant" else "Looks Benign. Still consult a doctor."
+    
+    # PDF content - text lines
+    lines = [
+        "SkinSense AI - Early Skin Cancer Detection Report",
+        "",
+        f"Date: {date_str}",
+        "",
+        "Prediction Result:",
+        f"{result.upper()}",
+        "",
+        f"Confidence: {confidence:.2f}%",
+        f"Risk Level: {risk}",
+        "Model: CNN | Input: 128 x 128",
+        "",
+        f"Recommendation: {advice}",
+        "",
+        "Disclaimer: For educational purposes only. Not a final medical diagnosis.",
+        "SkinSense AI | Final Year Project",
+    ]
+    
+    # PDF banane ka simple code
+    content = "BT /F1 14 Tf 50 750 Td "
+    for i, line in enumerate(lines):
+        clean = line.replace("(", "[").replace(")", "]").replace("\\", "")
+        if i == 0:
+            content += f"18 TL 0 -30 Td ({clean}) Tj "
+        elif line == result.upper():
+            content += f"0 -30 Td /F1 20 Tf ({clean}) Tj /F1 12 Tf "
+        else:
+            content += f"0 -22 Td ({clean}) Tj "
+    content += "ET"
+    
+    objects = []
+    objects.append(b"<< /Type /Catalog /Pages 2 0 R >>")
+    objects.append(b"<< /Type /Pages /Kids [3 0 R] /Count 1 >>")
+    objects.append(f"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>".encode())
+    objects.append(f"<< /Length {len(content)} >>\nstream\n{content}\nendstream".encode())
+    objects.append(b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>")
+    
+    pdf = io.BytesIO()
+    pdf.write(b"%PDF-1.4\n")
+    offsets = []
+    for i, obj in enumerate(objects, start=1):
+        offsets.append(pdf.tell())
+        pdf.write(f"{i} 0 obj\n".encode())
+        pdf.write(obj)
+        pdf.write(b"\nendobj\n")
+    xref_pos = pdf.tell()
+    pdf.write(f"xref\n0 {len(objects)+1}\n".encode())
+    pdf.write(b"0000000000 65535 f \n")
+    for off in offsets:
+        pdf.write(f"{off:010d} 00000 n \n".encode())
+    pdf.write(f"trailer\n<< /Size {len(objects)+1} /Root 1 0 R >>\nstartxref\n{xref_pos}\n%%EOF".encode())
+    pdf.seek(0)
+    return pdf
 
 st.markdown("""
 <style>
@@ -93,7 +104,6 @@ st.markdown("""
     }
     .feature-box b { font-size: 14px; color: #0F172A; }
     .feature-box p { font-size: 11px; color: #64748B; margin: 3px 0 0 0; line-height: 1.3; }
-    /* SINGLE UPLOAD BOX - BIGGER */
     [data-testid="stFileUploader"] {
         background: white;
         border: 2.5px dashed #14B8A6 !important;
@@ -107,7 +117,6 @@ st.markdown("""
         border-radius: 50px !important; padding: 10px 28px !important;
         font-weight: 700 !important; border: none !important;
     }
-    /* IMAGE - FULL INSIDE BOX, BIG */
     [data-testid="stImage"] img {
         width: 100% !important;
         max-height: 420px !important;
@@ -148,7 +157,6 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# --- NEW 4 CARDS - CHANGED ---
 c1, c2, c3, c4 = st.columns(4)
 with c1:
     st.markdown('<div class="feature-box"><div style="font-size:26px;">🔍</div><b>Early Detection</b><p>Detect at Early Stage</p></div>', unsafe_allow_html=True)
@@ -188,7 +196,6 @@ if sample_btn:
 
 if uploaded_file is not None:
     image = Image.open(uploaded_file).convert("RGB")
-    # IMAGE IN BIG BOX - FULL VISIBLE
     st.markdown('<div class="image-box">', unsafe_allow_html=True)
     st.image(image, caption='Your Uploaded Image - Full View', use_container_width=True)
     st.markdown('</div>', unsafe_allow_html=True)
@@ -217,7 +224,6 @@ if uploaded_file is not None:
             st.write(f"**Confidence:** {conf:.2f}%  |  **Risk:** Low")
             st.info("Good news! It looks Benign. Please still consult a doctor for confirmation.")
 
-        # --- PDF DOWNLOAD ---
         pdf_buffer = create_pdf_report(result, conf, risk)
         st.download_button("⬇️ Download PDF Report", data=pdf_buffer, file_name="SkinSense_Report.pdf", mime="application/pdf", use_container_width=True)
 
