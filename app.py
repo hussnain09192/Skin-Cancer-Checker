@@ -5,19 +5,21 @@ import numpy as np
 import io
 from datetime import datetime
 
-st.set_page_config(page_title="SkinSense AI - Skin Cancer Detector", page_icon="👁️", layout="centered")
+# --- 👇 YAHAN APNA NAAM LIKHO, BAAKI SAB KHUD BADAL JAYEGA 👇 ---
+DEVELOPER_NAME = "Apna Naam Yahan Likho"
+# Example: DEVELOPER_NAME = "Ahmad Raza"
 
-# --- PDF WITHOUT ANY LIBRARY - NO REPORTLAB NEEDED ---
+st.set_page_config(page_title=f"SkinSense AI - by {DEVELOPER_NAME}", page_icon="👁️", layout="centered")
+
+# --- PDF WITHOUT ANY LIBRARY ---
 def create_pdf_report(result, confidence, risk):
-    # Simple PDF banane ka tareeka - koi install nahi chahiye
     date_str = datetime.now().strftime('%d %B %Y, %I:%M %p')
     advice = "Please consult a Dermatologist immediately." if result == "Malignant" else "Looks Benign. Still consult a doctor."
-    
-    # PDF content - text lines
     lines = [
         "SkinSense AI - Early Skin Cancer Detection Report",
         "",
         f"Date: {date_str}",
+        f"Developed by: {DEVELOPER_NAME}",
         "",
         "Prediction Result:",
         f"{result.upper()}",
@@ -29,10 +31,8 @@ def create_pdf_report(result, confidence, risk):
         f"Recommendation: {advice}",
         "",
         "Disclaimer: For educational purposes only. Not a final medical diagnosis.",
-        "SkinSense AI | Final Year Project",
+        f"SkinSense AI | Developed by {DEVELOPER_NAME}",
     ]
-    
-    # PDF banane ka simple code
     content = "BT /F1 14 Tf 50 750 Td "
     for i, line in enumerate(lines):
         clean = line.replace("(", "[").replace(")", "]").replace("\\", "")
@@ -43,14 +43,12 @@ def create_pdf_report(result, confidence, risk):
         else:
             content += f"0 -22 Td ({clean}) Tj "
     content += "ET"
-    
     objects = []
     objects.append(b"<< /Type /Catalog /Pages 2 0 R >>")
     objects.append(b"<< /Type /Pages /Kids [3 0 R] /Count 1 >>")
     objects.append(f"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>".encode())
     objects.append(f"<< /Length {len(content)} >>\nstream\n{content}\nendstream".encode())
     objects.append(b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>")
-    
     pdf = io.BytesIO()
     pdf.write(b"%PDF-1.4\n")
     offsets = []
@@ -93,6 +91,13 @@ st.markdown("""
     .header-box p { color: #CCFBF1 !important; font-size: 15px; margin-top: 6px; }
     .badge-green { background: #22C55E; color: white; padding: 7px 16px; border-radius: 20px; font-size: 12px; font-weight: 700; }
     .badge-white { background: rgba(255,255,255,0.16); color: white; padding: 7px 16px; border-radius: 20px; font-size: 12px; font-weight: 600; border: 1px solid rgba(255,255,255,0.3); }
+    .dev-badge {
+        background: #F59E0B; color: #1A1A1A;
+        padding: 8px 18px; border-radius: 50px;
+        font-size: 13px; font-weight: 800;
+        display: inline-block; margin-top: 14px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
     .feature-box {
         background: white;
         padding: 18px 6px;
@@ -142,10 +147,12 @@ st.markdown("""
         color: white !important; font-size: 19px !important; padding: 16px !important; width: 100%;
     }
     .footer { text-align: center; color: #94A3B8; font-size: 12px; margin-top: 22px; }
+    .footer b { color: #0F766E; font-size: 14px; }
 </style>
 """, unsafe_allow_html=True)
 
-st.markdown("""
+# --- HEADER WITH YOUR NAME ---
+st.markdown(f"""
 <div class="header-box">
     <div class="logo-circle">👁️</div>
     <h1>Skin<span>Sense</span> AI</h1>
@@ -154,6 +161,8 @@ st.markdown("""
     <span class="badge-green">● AI MODEL ACTIVE</span>
     &nbsp;
     <span class="badge-white">CNN • 128 x 128 • High Accuracy</span>
+    <br>
+    <span class="dev-badge">👨‍💻 Developed by {DEVELOPER_NAME}</span>
 </div>
 """, unsafe_allow_html=True)
 
@@ -227,9 +236,9 @@ if uploaded_file is not None:
         pdf_buffer = create_pdf_report(result, conf, risk)
         st.download_button("⬇️ Download PDF Report", data=pdf_buffer, file_name="SkinSense_Report.pdf", mime="application/pdf", use_container_width=True)
 
-st.markdown("""
+st.markdown(f"""
 <div style="background:#FFFBEB; padding:12px; border-radius:12px; margin-top:20px; text-align:center; font-size:12px; color:#92400E;">
 ⚠️ <b>Disclaimer:</b> This tool is for educational purposes only. It is not a final medical diagnosis.
 </div>
-<div class="footer"><b>SkinSense AI</b> | Early Detection Saves Lives • Final Year Project</div>
+<div class="footer">Made with ❤️ by <b>{DEVELOPER_NAME}</b><br><b>SkinSense AI</b> | Early Detection Saves Lives • Final Year Project</div>
 """, unsafe_allow_html=True)
