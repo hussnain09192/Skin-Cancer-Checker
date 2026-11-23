@@ -5,7 +5,6 @@ import numpy as np
 
 st.set_page_config(page_title="SkinSense AI - Skin Cancer Detector", page_icon="👁️", layout="centered")
 
-# --- SAME LAYOUT LIKE FRIEND, BUT NEW COLOR + BIG BUTTONS ---
 st.markdown("""
 <style>
     .main { background-color: #F8FAFC; }
@@ -27,7 +26,7 @@ st.markdown("""
         font-size: 42px;
         box-shadow: 0 8px 20px rgba(0,0,0,0.25);
     }
-    .header-box h1 { color: white !important; font-size: 40px; margin: 0; letter-spacing: 0.5px; }
+    .header-box h1 { color: white !important; font-size: 40px; margin: 0; }
     .header-box h1 span { color: #5EEAD4; }
     .header-box p { color: #CCFBF1 !important; font-size: 15px; margin-top: 6px; }
     .badge-green {
@@ -51,15 +50,34 @@ st.markdown("""
     }
     .feature-box b { font-size: 14px; color: #0F172A; }
     .feature-box p { font-size: 11px; color: #64748B; margin: 3px 0 0 0; }
-    .upload-card {
+
+    /* --- SINGLE UPLOAD BOX - YEHI MAIN FIX HAI --- */
+    [data-testid="stFileUploader"] {
         background: white;
-        padding: 22px;
-        border-radius: 18px;
-        border: 2px dashed #14B8A6;
-        margin-top: 18px;
+        border: 2.5px dashed #14B8A6 !important;
+        border-radius: 18px !important;
+        padding: 28px 20px 22px 20px !important;
         text-align: center;
+        margin-top: 18px;
     }
-    /* BIG BUTTONS - ALL BUTTONS STYLISH */
+    [data-testid="stFileUploader"] section {
+        border: none !important;
+        padding: 0 !important;
+    }
+    [data-testid="stFileUploader"] button {
+        background: #0F766E !important;
+        color: white !important;
+        border-radius: 50px !important;
+        padding: 10px 28px !important;
+        font-weight: 700 !important;
+        border: none !important;
+        font-size: 15px !important;
+    }
+    [data-testid="stFileUploader"] small {
+        font-size: 13px !important;
+        color: #64748B !important;
+    }
+
     .stButton > button {
         border-radius: 50px !important;
         font-weight: 700 !important;
@@ -68,7 +86,6 @@ st.markdown("""
         border: none !important;
         box-shadow: 0 8px 18px rgba(0,0,0,0.15) !important;
     }
-    /* Main Predict Button - Biggest */
     div[data-testid="stButton"] button[kind="primary"] {
         background: linear-gradient(135deg, #0F766E, #14B8A6) !important;
         color: white !important;
@@ -80,7 +97,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# --- HEADER - SAME AS FRIEND STYLE, NEW NAME + LOGO ---
+# --- HEADER ---
 st.markdown("""
 <div class="header-box">
     <div class="logo-circle">👁️</div>
@@ -93,7 +110,7 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# --- 4 CARDS - SAME LAYOUT ---
+# --- 4 CARDS ---
 c1, c2, c3, c4 = st.columns(4)
 with c1:
     st.markdown('<div class="feature-box"><div style="font-size:26px;">⚡</div><b>Fast</b><p>Result in 2 Sec</p></div>', unsafe_allow_html=True)
@@ -115,12 +132,10 @@ except Exception as e:
     st.error(f"Error loading model: {e}")
     st.stop()
 
-# --- UPLOAD SECTION - SAME AS FRIEND, FULL PAGE ---
-st.markdown('<div class="upload-card"><h3 style="margin:0; color:#0F172A;">📸 Upload Skin Lesion Image</h3><p style="color:#64748B; font-size:13px; margin:5px 0 0 0;">Upload a clear, close-up image for best accuracy</p></div>', unsafe_allow_html=True)
+# --- SINGLE UPLOAD BOX - AB SIRF YEHI HAI, UPAR WALA ALAG BOX KHATAM ---
+uploaded_file = st.file_uploader("📸 Upload Skin Lesion Image", type=["jpg", "jpeg", "png"], help="Upload a clear, close-up image for best accuracy")
 
-uploaded_file = st.file_uploader("Choose Image", type=["jpg", "jpeg", "png"], label_visibility="collapsed")
-
-# --- EXTRA BUTTONS - NEW, FRIEND DOES NOT HAVE ---
+# --- EXTRA BUTTONS ---
 eb1, eb2, eb3 = st.columns(3)
 with eb1:
     sample_btn = st.button("🖼️ Try Sample Image", use_container_width=True)
@@ -131,12 +146,10 @@ with eb3:
 
 if clear_btn:
     st.rerun()
-
 if info_btn:
     st.info("1. Upload Image -> 2. Click Analyze -> 3. Get Result + Download Report")
-
 if sample_btn:
-    st.info("Please upload your own image to test. Sample images will be added soon.")
+    st.info("Please upload your own image to test.")
 
 if uploaded_file is not None:
     image = Image.open(uploaded_file).convert("RGB")
@@ -146,7 +159,6 @@ if uploaded_file is not None:
     img_array = np.array(resized) / 255.0
     img_array = np.expand_dims(img_array, axis=0)
 
-    # --- MAIN BIG BUTTON ---
     if st.button('🔬 Analyze Now', type="primary", use_container_width=True):
         with st.spinner('SkinSense AI is analyzing...'):
             prediction = model.predict(img_array)[0][0]
@@ -167,7 +179,6 @@ if uploaded_file is not None:
             st.info("Good news! It looks Benign. Please still consult a doctor for confirmation.")
             report = f"SkinSense AI Report\nResult: Benign\nConfidence: {conf:.2f}%\nAdvice: Routine Checkup"
 
-        # --- EXTRA BUTTON: DOWNLOAD REPORT ---
         st.download_button("⬇️ Download Full Report", data=report, file_name="SkinSense_Report.txt", mime="text/plain", use_container_width=True)
 
 st.markdown("""
