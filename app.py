@@ -5,9 +5,8 @@ import numpy as np
 import io
 from datetime import datetime
 
-# --- 👇 YAHAN APNA NAAM LIKHO, BAAKI SAB KHUD BADAL JAYEGA 👇 ---
-DEVELOPER_NAME = "Apna Naam Yahan Likho"
-# Example: DEVELOPER_NAME = "Ahmad Raza"
+# --- 👇 TUMHARA NAAM LAG GAYA 👇 ---
+DEVELOPER_NAME = "Hussnain Khalid"
 
 st.set_page_config(page_title=f"SkinSense AI - by {DEVELOPER_NAME}", page_icon="👁️", layout="centered")
 
@@ -109,19 +108,56 @@ st.markdown("""
     }
     .feature-box b { font-size: 14px; color: #0F172A; }
     .feature-box p { font-size: 11px; color: #64748B; margin: 3px 0 0 0; line-height: 1.3; }
+
+    /* --- UPLOAD BOX FIX - BUTTON AB POORA ANDAR AAYEGA --- */
     [data-testid="stFileUploader"] {
         background: white;
         border: 2.5px dashed #14B8A6 !important;
         border-radius: 18px !important;
-        padding: 30px 20px 22px 20px !important;
+        padding: 22px 22px 18px 22px !important;
         margin-top: 18px;
     }
-    [data-testid="stFileUploader"] section { border: none !important; padding: 0 !important; }
-    [data-testid="stFileUploader"] button {
-        background: #0F766E !important; color: white !important;
-        border-radius: 50px !important; padding: 10px 28px !important;
-        font-weight: 700 !important; border: none !important;
+    [data-testid="stFileUploader"] section {
+        border: none !important;
+        padding: 0 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 10px !important;
     }
+    [data-testid="stFileUploader"] section > div {
+        width: 100% !important;
+        max-width: 100% !important;
+        text-align: center !important;
+    }
+    /* UPLOAD BUTTON - FULL WIDTH INSIDE BOX */
+    [data-testid="stFileUploader"] button {
+        background: #0F766E !important;
+        color: white !important;
+        border-radius: 14px !important;
+        padding: 14px 20px !important;
+        font-weight: 700 !important;
+        font-size: 16px !important;
+        border: none !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+    [data-testid="stFileUploader"] small {
+        text-align: center !important;
+        width: 100% !important;
+        display: block !important;
+        font-size: 12px !important;
+        color: #64748B !important;
+    }
+    [data-testid="stFileUploader"] label {
+        text-align: center !important;
+        width: 100% !important;
+        justify-content: center !important;
+        font-size: 16px !important;
+        font-weight: 700 !important;
+        color: #0F172A !important;
+    }
+
     [data-testid="stImage"] img {
         width: 100% !important;
         max-height: 420px !important;
@@ -151,7 +187,6 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# --- HEADER WITH YOUR NAME ---
 st.markdown(f"""
 <div class="header-box">
     <div class="logo-circle">👁️</div>
