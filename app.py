@@ -18,11 +18,9 @@ DEVELOPER_NAME = "Hussnain Khalid"
 
 st.set_page_config(page_title=f"SkinSense AI - by {DEVELOPER_NAME}", page_icon="👁️", layout="centered")
 
-# --- SESSION STATE - SAB KUCH YAHAN SE CONTROL HOGA ---
+# --- SESSION STATE ---
 if "uploader_key" not in st.session_state:
     st.session_state.uploader_key = 0
-if "use_sample" not in st.session_state:
-    st.session_state.use_sample = False
 if "show_how" not in st.session_state:
     st.session_state.show_how = False
 if "analysis_done" not in st.session_state:
@@ -35,16 +33,6 @@ if "risk" not in st.session_state:
     st.session_state.risk = ""
 if "show_download" not in st.session_state:
     st.session_state.show_download = False
-
-SAMPLE_URL = "https://upload.wikimedia.org/wikipedia/commons/5/5d/Melanoma_in_situ.jpg"
-
-def load_sample_image():
-    try:
-        r = requests.get(SAMPLE_URL, timeout=10)
-        return Image.open(io.BytesIO(r.content)).convert("RGB")
-    except:
-        img = Image.new("RGB", (400, 400), color=(180, 120, 90))
-        return img
 
 # =====================================================
 # --- PROFESSIONAL PDF REPORT - BILKUL REAL JESI ---
@@ -252,23 +240,16 @@ except Exception as e:
 
 uploaded_file = st.file_uploader("📸 Upload Skin Lesion Image", type=["jpg", "jpeg", "png"], key=f"uploader_{st.session_state.uploader_key}")
 
-eb1, eb2, eb3 = st.columns(3)
+# --- NAYA FIX: Try Sample KHATAM, sirf 2 button - dono FULL WIDTH ---
+eb1, eb2 = st.columns(2)
 with eb1:
-    if st.button("🖼️ Try Sample Image", use_container_width=True):
-        st.session_state.use_sample = True
-        st.session_state.show_how = False
-        st.session_state.analysis_done = False
-        st.session_state.show_download = False
-        st.rerun()
-with eb2:
     if st.button("🗑️ Clear Image", use_container_width=True):
-        st.session_state.use_sample = False
         st.session_state.show_how = False
         st.session_state.analysis_done = False
         st.session_state.show_download = False
         st.session_state.uploader_key += 1
         st.rerun()
-with eb3:
+with eb2:
     if st.button("ℹ️ How It Works", use_container_width=True):
         st.session_state.show_how = not st.session_state.show_how
         st.rerun()
@@ -276,7 +257,7 @@ with eb3:
 if st.session_state.show_how:
     st.info("""
     **How It Works - 3 Easy Steps:**
-    1️⃣ **Upload Image** - Apni skin wali tasveer upload karo ya Try Sample dabao
+    1️⃣ **Upload Image** - Apni skin wali tasveer upload karo
     2️⃣ **Analyze Now** - AI tumhari tasveer ko check karega
     3️⃣ **Download PDF** - Agar chaho to Download PDF dabao, warna nahi
     """)
@@ -286,10 +267,6 @@ image_source = ""
 if uploaded_file is not None:
     image = Image.open(uploaded_file).convert("RGB")
     image_source = "Your Uploaded Image"
-    st.session_state.use_sample = False
-elif st.session_state.use_sample:
-    image = load_sample_image()
-    image_source = "Sample Image - Try Karne Ke Liye"
 
 if image is not None:
     st.markdown('<div class="image-box">', unsafe_allow_html=True)
