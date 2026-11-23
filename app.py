@@ -10,13 +10,22 @@ DEVELOPER_NAME = "Hussnain Khalid"
 
 st.set_page_config(page_title=f"SkinSense AI - by {DEVELOPER_NAME}", page_icon="👁️", layout="centered")
 
-# --- SESSION STATE FOR CLEAR / SAMPLE / HOW IT WORKS ---
 if "uploader_key" not in st.session_state:
     st.session_state.uploader_key = 0
 if "use_sample" not in st.session_state:
     st.session_state.use_sample = False
 if "show_how" not in st.session_state:
     st.session_state.show_how = False
+if "analysis_done" not in st.session_state:
+    st.session_state.analysis_done = False
+if "result" not in st.session_state:
+    st.session_state.result = None
+if "conf" not in st.session_state:
+    st.session_state.conf = 0
+if "risk" not in st.session_state:
+    st.session_state.risk = ""
+if "want_pdf" not in st.session_state:
+    st.session_state.want_pdf = False
 
 SAMPLE_URL = "https://upload.wikimedia.org/wikipedia/commons/5/5d/Melanoma_in_situ.jpg"
 
@@ -25,11 +34,9 @@ def load_sample_image():
         r = requests.get(SAMPLE_URL, timeout=10)
         return Image.open(io.BytesIO(r.content)).convert("RGB")
     except:
-        # Agar internet na ho to ek dummy sample bana do
         img = Image.new("RGB", (400, 400), color=(180, 120, 90))
         return img
 
-# --- PDF WITHOUT ANY LIBRARY ---
 def create_pdf_report(result, confidence, risk):
     date_str = datetime.now().strftime('%d %B %Y, %I:%M %p')
     advice = "Please consult a Dermatologist immediately." if result == "Malignant" else "Looks Benign. Still consult a doctor."
@@ -127,8 +134,6 @@ st.markdown("""
     }
     .feature-box b { font-size: 14px; color: #0F172A; }
     .feature-box p { font-size: 11px; color: #64748B; margin: 3px 0 0 0; line-height: 1.3; }
-
-    /* --- UPLOAD BOX FIX --- */
     [data-testid="stFileUploader"] {
         background: white;
         border: 2.5px dashed #14B8A6 !important;
@@ -136,7 +141,6 @@ st.markdown("""
         padding: 18px 18px 14px 18px !important;
         margin-top: 18px;
     }
-    /* Sirf Browse Files wala button full width hoga */
     [data-testid="stFileUploaderDropzone"] button {
         background: #0F766E !important;
         color: white !important;
@@ -147,7 +151,6 @@ st.markdown("""
         border: none !important;
         width: 100% !important;
     }
-    /* FIX: Upload hone ke baad wali file row - Cross aur Plus alag alag rahenge */
     [data-testid="stFileUploader"] [data-testid="stFileUploaderFile"] {
         display: flex !important;
         align-items: center !important;
@@ -165,14 +168,12 @@ st.markdown("""
         color: #0F172A !important;
         border: 1px solid #E2E8F0 !important;
     }
-    /* Delete (X) button alag se */
     button[data-testid="stFileUploaderDeleteBtn"] {
         width: 36px !important;
         min-width: 36px !important;
         background: #FEE2E2 !important;
         color: #DC2626 !important;
     }
-
     [data-testid="stImage"] img {
         width: 100% !important;
         max-height: 420px !important;
@@ -238,17 +239,20 @@ except Exception as e:
 
 uploaded_file = st.file_uploader("📸 Upload Skin Lesion Image", type=["jpg", "jpeg", "png"], key=f"uploader_{st.session_state.uploader_key}")
 
-# --- 3 BUTTONS - AB SACH MEIN KAAM KARENGE ---
 eb1, eb2, eb3 = st.columns(3)
 with eb1:
     if st.button("🖼️ Try Sample Image", use_container_width=True):
         st.session_state.use_sample = True
         st.session_state.show_how = False
+        st.session_state.analysis_done = False
+        st.session_state.want_pdf = False
         st.rerun()
 with eb2:
     if st.button("🗑️ Clear Image", use_container_width=True):
         st.session_state.use_sample = False
         st.session_state.show_how = False
+        st.session_state.analysis_done = False
+        st.session_state.want_pdf = False
         st.session_state.uploader_key += 1
         st.rerun()
 with eb3:
@@ -261,10 +265,9 @@ if st.session_state.show_how:
     **How It Works - 3 Easy Steps:**
     1️⃣ **Upload Image** - Apni skin wali tasveer upload karo ya Try Sample dabao
     2️⃣ **Analyze Now** - AI tumhari tasveer ko check karega
-    3️⃣ **Get Result + PDF** - Benign ya Malignant ka result + PDF Report download karo
+    3️⃣ **PDF (Optional)** - Agar chaho to Generate PDF dabao, warna nahi
     """)
 
-# --- IMAGE DECIDE KARO: UPLOADED YA SAMPLE ---
 image = None
 image_source = ""
 if uploaded_file is not None:
@@ -287,25 +290,50 @@ if image is not None:
     if st.button('🔬 Analyze Now', type="primary", use_container_width=True):
         with st.spinner('SkinSense AI is analyzing...'):
             prediction = model.predict(img_array)[0][0]
-
-        st.markdown("---")
         if prediction > 0.5:
-            conf = prediction * 100
-            result, risk = "Malignant", "High"
+            st.session_state.result = "Malignant"
+            st.session_state.conf = prediction * 100
+            st.session_state.risk = "High"
+            st.session_state.pred_value = float(prediction)
+        else:
+            st.session_state.result = "Benign"
+            st.session_state.conf = (1 - prediction) * 100
+            st.session_state.risk = "Low"
+            st.session_state.pred_value = float(1 - prediction)
+        st.session_state.analysis_done = True
+        st.session_state.want_pdf = False
+        st.rerun()
+
+    # --- RESULT DIKHAO, PDF NAHI ---
+    if st.session_state.analysis_done:
+        st.markdown("---")
+        result = st.session_state.result
+        conf = st.session_state.conf
+        risk = st.session_state.risk
+
+        if result == "Malignant":
             st.error(f"### ⚠️ Prediction: Malignant")
-            st.progress(float(prediction))
+            st.progress(st.session_state.pred_value)
             st.write(f"**Confidence:** {conf:.2f}%  |  **Risk:** High")
             st.warning("Please consult a Dermatologist immediately.")
         else:
-            conf = (1 - prediction) * 100
-            result, risk = "Benign", "Low"
             st.success(f"### ✅ Prediction: Benign")
-            st.progress(float(1 - prediction))
+            st.progress(st.session_state.pred_value)
             st.write(f"**Confidence:** {conf:.2f}%  |  **Risk:** Low")
             st.info("Good news! It looks Benign. Please still consult a doctor for confirmation.")
 
-        pdf_buffer = create_pdf_report(result, conf, risk)
-        st.download_button("⬇️ Download PDF Report", data=pdf_buffer, file_name="SkinSense_Report.pdf", mime="application/pdf", use_container_width=True)
+        st.markdown("---")
+        # --- AB SIRF YE BUTTON AAYEGA, DOWNLOAD NAHI ---
+        if not st.session_state.want_pdf:
+            if st.button("📄 Generate PDF Report", use_container_width=True):
+                st.session_state.want_pdf = True
+                st.rerun()
+
+        # --- JAB USER KHUD CHAHEGA TAB HI DOWNLOAD AAYEGA ---
+        if st.session_state.want_pdf:
+            pdf_buffer = create_pdf_report(result, conf, risk)
+            st.success("PDF Ready hai! Neeche se download karo 👇")
+            st.download_button("⬇️ Download PDF Report", data=pdf_buffer, file_name="SkinSense_Report.pdf", mime="application/pdf", use_container_width=True)
 
 st.markdown(f"""
 <div style="background:#FFFBEB; padding:12px; border-radius:12px; margin-top:20px; text-align:center; font-size:12px; color:#92400E;">
