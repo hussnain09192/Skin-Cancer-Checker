@@ -3,128 +3,163 @@ import tensorflow as tf
 from PIL import Image
 import numpy as np
 
-# --- PAGE SETTING ---
-st.set_page_config(page_title="SkinGuard AI - Skin Cancer Detector", page_icon="🛡️", layout="centered")
+st.set_page_config(page_title="SkinGuard AI - Advanced Skin Cancer Detector", page_icon="🛡️", layout="centered")
 
-# --- PREMIUM MODERN CSS ---
+# --- PREMIUM CSS - DIFFERENT FROM FRIEND ---
 st.markdown("""
 <style>
-    .main { background-color: #F1F5F9; }
-    .header-box {
-        background: linear-gradient(135deg, #0F172A 0%, #1E3A8A 55%, #2563EB 100%);
-        padding: 35px 25px 28px 25px;
-        border-radius: 22px;
+    .main { background-color: #F8F7FF; }
+    .hero {
+        background: linear-gradient(135deg, #1E1B4B 0%, #6D28D9 55%, #0EA5E9 100%);
+        padding: 32px 22px;
+        border-radius: 24px;
         color: white;
         text-align: center;
-        box-shadow: 0 15px 30px rgba(0,0,0,0.20);
-        margin-bottom: 22px;
+        box-shadow: 0 18px 35px rgba(109,40,217,0.35);
+        margin-bottom: 18px;
     }
-    .logo-circle {
+    .hero-logo {
         background: white;
-        width: 85px; height: 85px;
-        border-radius: 50%;
+        width: 88px; height: 88px;
+        border-radius: 22px;
         display: flex; align-items: center; justify-content: center;
         margin: 0 auto 12px auto;
-        font-size: 45px;
-        box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+        font-size: 48px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        transform: rotate(-3deg);
     }
-    .header-box h1 { color: white !important; font-size: 42px; margin: 0; letter-spacing: 1px; }
-    .header-box h1 span { color: #60A5FA; }
-    .header-box p { color: #CBD5E1 !important; font-size: 16px; margin-top: 8px; }
-    .badge {
-        background: rgba(255,255,255,0.15);
-        padding: 6px 16px; border-radius: 20px;
-        font-size: 13px; color: white;
-        border: 1px solid rgba(255,255,255,0.25);
+    .hero h1 { color: white !important; font-size: 40px; margin: 0; letter-spacing: 0.5px; }
+    .hero h1 span { color: #A5F3FC; }
+    .hero p { color: #DDD6FE !important; font-size: 15px; margin-top: 8px; }
+    .badge-green {
+        background: #22C55E; color: white;
+        padding: 7px 16px; border-radius: 20px;
+        font-size: 12px; font-weight: 700;
     }
-    .steps-card {
+    .badge-white {
+        background: rgba(255,255,255,0.18); color: white;
+        padding: 7px 16px; border-radius: 20px;
+        font-size: 12px; font-weight: 600;
+        border: 1px solid rgba(255,255,255,0.3);
+    }
+    .feature-box {
         background: white;
-        padding: 18px 10px;
+        padding: 16px 8px;
         border-radius: 16px;
-        border: 1px solid #E2E8F0;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-        margin-bottom: 20px;
         text-align: center;
+        border: 1px solid #EDE9FE;
+        box-shadow: 0 4px 14px rgba(0,0,0,0.05);
     }
-    .step { display: inline-block; margin: 0 10px; font-size: 14px; color: #334155; font-weight: 600; }
+    .feature-box b { font-size: 14px; color: #1E1B4B; }
+    .feature-box p { font-size: 11px; color: #64748B; margin: 2px 0 0 0; }
+    .upload-title { font-size: 22px; font-weight: 800; color: #1E1B4B; margin-top: 18px; }
+    .upload-sub { font-size: 13px; color: #64748B; margin-bottom: 10px; }
     .stButton > button {
-        background: linear-gradient(135deg, #1E3A8A, #2563EB) !important;
+        background: linear-gradient(135deg, #6D28D9, #0EA5E9) !important;
         color: white !important;
-        font-size: 18px !important;
+        font-size: 17px !important;
         font-weight: 700 !important;
-        padding: 13px 40px !important;
+        padding: 13px !important;
         border-radius: 50px !important;
         border: none !important;
         width: 100%;
-        box-shadow: 0 10px 22px rgba(37,99,235,0.35);
+        box-shadow: 0 10px 25px rgba(109,40,217,0.35);
     }
-    .footer {
-        text-align: center; color: #64748B; font-size: 13px; margin-top: 30px;
+    .result-card {
+        background: white;
+        padding: 20px;
+        border-radius: 18px;
+        border: 1px solid #EDE9FE;
+        text-align: center;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.06);
     }
+    .footer { text-align: center; color: #94A3B8; font-size: 12px; margin-top: 25px; }
 </style>
 """, unsafe_allow_html=True)
 
-# --- HEADER / LOGO ---
+# --- HERO / HEADER ---
 st.markdown("""
-<div class="header-box">
-    <div class="logo-circle">🛡️</div>
+<div class="hero">
+    <div class="hero-logo">🛡️</div>
     <h1>Skin<span>Guard</span> AI</h1>
-    <p>Early Detection Saves Lives | AI Skin Cancer Screening</p>
+    <p>Next-Gen Skin Cancer Screening • Benign vs Malignant • Deep Learning</p>
     <br>
-    <span class="badge">✦ AI-Powered &nbsp; • &nbsp; Fast &nbsp; • &nbsp; Secure &nbsp; • &nbsp; Accurate</span>
+    <span class="badge-green">● MODEL ACTIVE</span>
+    &nbsp;
+    <span class="badge-white">CNN • 128 x 128 • v2.0</span>
 </div>
 """, unsafe_allow_html=True)
 
-st.markdown("""
-<div class="steps-card">
-    <span class="step">① Upload Image</span>
-    <span style="color:#94A3B8;">→</span>
-    <span class="step">② Click Predict</span>
-    <span style="color:#94A3B8;">→</span>
-    <span class="step">③ Get Instant Result</span>
-</div>
-""", unsafe_allow_html=True)
+# --- 4 FEATURE CARDS - DIFFERENT STYLE ---
+c1, c2, c3, c4 = st.columns(4)
+with c1:
+    st.markdown('<div class="feature-box"><div style="font-size:24px;">⚡</div><b>Instant</b><p>2 Sec Result</p></div>', unsafe_allow_html=True)
+with c2:
+    st.markdown('<div class="feature-box"><div style="font-size:24px;">🧠</div><b>Smart AI</b><p>Deep CNN Model</p></div>', unsafe_allow_html=True)
+with c3:
+    st.markdown('<div class="feature-box"><div style="font-size:24px;">🔒</div><b>100% Private</b><p>No Image Saved</p></div>', unsafe_allow_html=True)
+with c4:
+    st.markdown('<div class="feature-box"><div style="font-size:24px;">📊</div><b>Risk Meter</b><p>Confidence Score</p></div>', unsafe_allow_html=True)
 
-# --- MODEL ---
+# --- MODEL LOAD ---
 @st.cache_resource
 def load_my_model():
     return tf.keras.models.load_model('skin_cancer_cnn_model.keras')
 
 try:
     model = load_my_model()
-    st.success("✅ Model Loaded Successfully!")
 except Exception as e:
     st.error(f"Error loading model: {e}")
     st.stop()
 
 # --- UPLOAD ---
-uploaded_file = st.file_uploader("📸 Upload Your Skin Lesion Image", type=["jpg", "jpeg", "png"])
+st.markdown('<div class="upload-title">📸 Upload Skin Lesion Image</div>', unsafe_allow_html=True)
+st.markdown('<div class="upload-sub">Upload a clear, close-up image of the skin lesion for best accuracy.</div>', unsafe_allow_html=True)
+
+uploaded_file = st.file_uploader("Choose Image", type=["jpg", "jpeg", "png"], label_visibility="collapsed")
 
 if uploaded_file is not None:
     image = Image.open(uploaded_file).convert("RGB")
-    st.image(image, caption='Uploaded Image', use_container_width=True)
 
-    resized_image = image.resize((128, 128))
-    img_array = np.array(resized_image) / 255.0
+    col_img, col_res = st.columns([1, 1])
+    with col_img:
+        st.image(image, caption='Your Image', use_container_width=True)
+
+    resized = image.resize((128, 128))
+    img_array = np.array(resized) / 255.0
     img_array = np.expand_dims(img_array, axis=0)
 
-    if st.button('🔬 Analyze Now'):
-        with st.spinner('AI is analyzing your image...'):
+    if st.button('🔬 Analyze With AI'):
+        with st.spinner('AI is analyzing...'):
             prediction = model.predict(img_array)[0][0]
 
-        st.markdown("---")
-        if prediction > 0.5:
-            confidence = prediction * 100
-            st.error(f"### ⚠️ Prediction: Malignant\n**Confidence: {confidence:.2f}%**")
-            st.warning("Please consult a dermatologist immediately. This is an AI prediction, not a final medical diagnosis.")
-        else:
-            confidence = (1 - prediction) * 100
-            st.success(f"### ✅ Prediction: Benign\n**Confidence: {confidence:.2f}%**")
-            st.info("Good news! It looks Benign. Still, please consult a doctor for confirmation.")
+        with col_res:
+            if prediction > 0.5:
+                conf = prediction * 100
+                st.markdown(f"""
+                <div class="result-card" style="border-top: 5px solid #EF4444;">
+                    <div style="font-size:40px;">⚠️</div>
+                    <h3 style="color:#EF4444; margin:5px 0;">Malignant</h3>
+                    <p style="font-size:13px; color:#64748B;">Confidence: <b>{conf:.2f}%</b></p>
+                </div>
+                """, unsafe_allow_html=True)
+                st.progress(float(prediction))
+                st.error("High Risk Detected. Please consult a Dermatologist immediately.")
+            else:
+                conf = (1 - prediction) * 100
+                st.markdown(f"""
+                <div class="result-card" style="border-top: 5px solid #22C55E;">
+                    <div style="font-size:40px;">✅</div>
+                    <h3 style="color:#22C55E; margin:5px 0;">Benign</h3>
+                    <p style="font-size:13px; color:#64748B;">Confidence: <b>{conf:.2f}%</b></p>
+                </div>
+                """, unsafe_allow_html=True)
+                st.progress(float(1 - prediction))
+                st.success("Low Risk. It looks Benign. Still consult a doctor for confirmation.")
 
 st.markdown("""
-<div class="footer">
-    <b>SkinGuard AI</b> | Developed for Early Skin Cancer Detection<br>
-    Disclaimer: This tool is for educational purposes only. It is not a medical diagnosis.
+<div style="background:#FFFBEB; padding:12px; border-radius:12px; margin-top:20px; text-align:center; font-size:12px; color:#92400E;">
+⚠️ <b>Disclaimer:</b> This tool is for educational purposes only. Please consult a Dermatologist for final diagnosis.
 </div>
+<div class="footer"><b>SkinGuard AI</b> | Final Year Project • Powered by CNN</div>
 """, unsafe_allow_html=True)
