@@ -2,164 +2,164 @@ import streamlit as st
 import tensorflow as tf
 from PIL import Image
 import numpy as np
+import io
 
-st.set_page_config(page_title="SkinGuard AI - Advanced Skin Cancer Detector", page_icon="🛡️", layout="centered")
+st.set_page_config(page_title="DermaLens AI", page_icon="🔬", layout="wide")
 
-# --- PREMIUM CSS - DIFFERENT FROM FRIEND ---
+# --- COMPLETELY DIFFERENT STYLE - MINT + BLACK ---
 st.markdown("""
 <style>
-    .main { background-color: #F8F7FF; }
-    .hero {
-        background: linear-gradient(135deg, #1E1B4B 0%, #6D28D9 55%, #0EA5E9 100%);
-        padding: 32px 22px;
-        border-radius: 24px;
-        color: white;
-        text-align: center;
-        box-shadow: 0 18px 35px rgba(109,40,217,0.35);
-        margin-bottom: 18px;
+    .main { background-color: #FFFFFF; }
+    .topbar {
+        background: #0F0F0F;
+        padding: 14px 20px;
+        border-radius: 14px;
+        display: flex; justify-content: space-between; align-items: center;
+        margin-bottom: 20px;
     }
-    .hero-logo {
-        background: white;
-        width: 88px; height: 88px;
-        border-radius: 22px;
-        display: flex; align-items: center; justify-content: center;
-        margin: 0 auto 12px auto;
-        font-size: 48px;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-        transform: rotate(-3deg);
-    }
-    .hero h1 { color: white !important; font-size: 40px; margin: 0; letter-spacing: 0.5px; }
-    .hero h1 span { color: #A5F3FC; }
-    .hero p { color: #DDD6FE !important; font-size: 15px; margin-top: 8px; }
-    .badge-green {
-        background: #22C55E; color: white;
-        padding: 7px 16px; border-radius: 20px;
-        font-size: 12px; font-weight: 700;
-    }
-    .badge-white {
-        background: rgba(255,255,255,0.18); color: white;
-        padding: 7px 16px; border-radius: 20px;
-        font-size: 12px; font-weight: 600;
-        border: 1px solid rgba(255,255,255,0.3);
-    }
-    .feature-box {
-        background: white;
-        padding: 16px 8px;
-        border-radius: 16px;
-        text-align: center;
-        border: 1px solid #EDE9FE;
-        box-shadow: 0 4px 14px rgba(0,0,0,0.05);
-    }
-    .feature-box b { font-size: 14px; color: #1E1B4B; }
-    .feature-box p { font-size: 11px; color: #64748B; margin: 2px 0 0 0; }
-    .upload-title { font-size: 22px; font-weight: 800; color: #1E1B4B; margin-top: 18px; }
-    .upload-sub { font-size: 13px; color: #64748B; margin-bottom: 10px; }
-    .stButton > button {
-        background: linear-gradient(135deg, #6D28D9, #0EA5E9) !important;
-        color: white !important;
-        font-size: 17px !important;
-        font-weight: 700 !important;
-        padding: 13px !important;
-        border-radius: 50px !important;
-        border: none !important;
-        width: 100%;
-        box-shadow: 0 10px 25px rgba(109,40,217,0.35);
-    }
-    .result-card {
-        background: white;
-        padding: 20px;
+    .topbar b { color: white; font-size: 20px; }
+    .topbar b span { color: #00E5A0; }
+    .topbar p { color: #A1A1AA; font-size: 12px; margin: 0; }
+    .left-card {
+        background: #F0FDF4;
+        padding: 22px;
         border-radius: 18px;
-        border: 1px solid #EDE9FE;
-        text-align: center;
-        box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+        border: 1px solid #BBF7D0;
     }
-    .footer { text-align: center; color: #94A3B8; font-size: 12px; margin-top: 25px; }
+    .left-card h2 { color: #14532D; font-size: 34px; line-height: 1.1; margin: 0; }
+    .left-card p { color: #4B5563; font-size: 14px; }
+    .pill { background: white; border: 1px solid #E5E7EB; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-block; margin: 3px; }
+    .stButton > button {
+        border-radius: 12px !important;
+        font-weight: 700 !important;
+        padding: 12px !important;
+        border: none !important;
+    }
+    /* Main Analyze Button - Green */
+    div[data-testid="stButton"] button[kind="primary"] {
+        background: #00C389 !important; color: white !important; font-size: 17px !important;
+    }
+    .footer { text-align: center; color: #9CA3AF; font-size: 12px; margin-top: 20px; }
 </style>
 """, unsafe_allow_html=True)
 
-# --- HERO / HEADER ---
+# --- TOP BAR - NOT HERO ---
 st.markdown("""
-<div class="hero">
-    <div class="hero-logo">🛡️</div>
-    <h1>Skin<span>Guard</span> AI</h1>
-    <p>Next-Gen Skin Cancer Screening • Benign vs Malignant • Deep Learning</p>
-    <br>
-    <span class="badge-green">● MODEL ACTIVE</span>
-    &nbsp;
-    <span class="badge-white">CNN • 128 x 128 • v2.0</span>
+<div class="topbar">
+    <div><b>🔬 Derma<span>Lens</span> AI</b><p>Advanced Dermatology Assistant</p></div>
+    <div style="text-align:right;"><span style="color:#00E5A0; font-weight:700;">● LIVE</span><p>AI Model Ready</p></div>
 </div>
 """, unsafe_allow_html=True)
 
-# --- 4 FEATURE CARDS - DIFFERENT STYLE ---
-c1, c2, c3, c4 = st.columns(4)
-with c1:
-    st.markdown('<div class="feature-box"><div style="font-size:24px;">⚡</div><b>Instant</b><p>2 Sec Result</p></div>', unsafe_allow_html=True)
-with c2:
-    st.markdown('<div class="feature-box"><div style="font-size:24px;">🧠</div><b>Smart AI</b><p>Deep CNN Model</p></div>', unsafe_allow_html=True)
-with c3:
-    st.markdown('<div class="feature-box"><div style="font-size:24px;">🔒</div><b>100% Private</b><p>No Image Saved</p></div>', unsafe_allow_html=True)
-with c4:
-    st.markdown('<div class="feature-box"><div style="font-size:24px;">📊</div><b>Risk Meter</b><p>Confidence Score</p></div>', unsafe_allow_html=True)
+# --- SIDEBAR - EXTRA FEATURE, FRIEND DOES NOT HAVE ---
+with st.sidebar:
+    st.markdown("### 🔬 DermaLens AI")
+    st.caption("Your Skin Health Companion")
+    st.divider()
+    menu = st.radio("Navigate", ["🏠 Home - Scanner", "📖 How It Works", "ℹ️ About Model"])
+    st.divider()
+    st.markdown("**Model Info**")
+    st.info("Architecture: CNN\nInput: 128 x 128\nClasses: Benign / Malignant")
+    st.warning("⚠️ For educational use only. Not a medical diagnosis.")
+    st.caption("Made by DermaLens Team")
 
-# --- MODEL LOAD ---
-@st.cache_resource
-def load_my_model():
-    return tf.keras.models.load_model('skin_cancer_cnn_model.keras')
-
-try:
-    model = load_my_model()
-except Exception as e:
-    st.error(f"Error loading model: {e}")
+if menu == "📖 How It Works":
+    st.markdown("## How DermaLens Works?")
+    st.markdown("**1.** Upload a clear image\n\n**2.** Our CNN model scans 128x128 pixels\n\n**3.** You get Benign / Malignant result with confidence\n\n**4.** Download your report")
     st.stop()
 
-# --- UPLOAD ---
-st.markdown('<div class="upload-title">📸 Upload Skin Lesion Image</div>', unsafe_allow_html=True)
-st.markdown('<div class="upload-sub">Upload a clear, close-up image of the skin lesion for best accuracy.</div>', unsafe_allow_html=True)
+if menu == "ℹ️ About Model":
+    st.markdown("## About This Project")
+    st.write("DermaLens AI is a Final Year Project using Convolutional Neural Networks (CNN) trained on skin lesion dataset to detect skin cancer early.")
+    st.write("It helps in early screening, so patients can consult doctors on time.")
+    st.stop()
 
-uploaded_file = st.file_uploader("Choose Image", type=["jpg", "jpeg", "png"], label_visibility="collapsed")
+# --- MAIN LAYOUT - 2 COLUMNS, DIFFERENT FROM FRIEND ---
+left, right = st.columns([1.1, 1])
 
-if uploaded_file is not None:
-    image = Image.open(uploaded_file).convert("RGB")
+with left:
+    st.markdown("""
+    <div class="left-card">
+        <span class="pill">✦ AI-Powered</span> <span class="pill">🔒 Private</span>
+        <h2>See What Your<br>Skin Is<br>Telling You.</h2>
+        <p>Upload a lesion image and let DermaLens AI analyze it in seconds. Early detection can save lives.</p>
+        <p>✅ <b>Fast</b> &nbsp; ✅ <b>Accurate</b> &nbsp; ✅ <b>Free</b></p>
+    </div>
+    """, unsafe_allow_html=True)
+    st.markdown("#### Why Choose DermaLens?")
+    c1, c2, c3 = st.columns(3)
+    c1.metric("Speed", "2 Sec", "Instant")
+    c2.metric("Input", "128x128", "CNN")
+    c3.metric("Privacy", "100%", "No Save")
 
-    col_img, col_res = st.columns([1, 1])
-    with col_img:
-        st.image(image, caption='Your Image', use_container_width=True)
+with right:
+    st.markdown("### 📸 Scan Your Skin")
+    st.caption("Drag & drop or browse your image. JPG, PNG supported.")
 
-    resized = image.resize((128, 128))
-    img_array = np.array(resized) / 255.0
-    img_array = np.expand_dims(img_array, axis=0)
+    uploaded_file = st.file_uploader("Upload Image", type=["jpg", "jpeg", "png"], label_visibility="collapsed")
 
-    if st.button('🔬 Analyze With AI'):
-        with st.spinner('AI is analyzing...'):
-            prediction = model.predict(img_array)[0][0]
+    # --- EXTRA BUTTONS - FRIEND DOES NOT HAVE ---
+    b1, b2 = st.columns(2)
+    with b1:
+        use_sample = st.button("🖼️ Try Sample Image")
+    with b2:
+        clear_btn = st.button("🗑️ Clear")
 
-        with col_res:
+    if clear_btn:
+        st.rerun()
+
+    image = None
+    if uploaded_file is not None:
+        image = Image.open(uploaded_file).convert("RGB")
+    elif use_sample:
+        st.info("Sample feature: Please upload your own image to test. Sample images coming soon.")
+    
+    if image is not None:
+        st.image(image, use_container_width=True)
+
+        # Preprocess
+        resized = image.resize((128, 128))
+        img_array = np.array(resized) / 255.0
+        img_array = np.expand_dims(img_array, axis=0)
+
+        # --- MAIN + EXTRA BUTTONS ---
+        col_a, col_b = st.columns([2, 1])
+        with col_a:
+            analyze = st.button("🚀 Analyze Now", type="primary", use_container_width=True)
+        with col_b:
+            download_report = st.button("📄 Report", use_container_width=True)
+
+        if analyze:
+            @st.cache_resource
+            def load_my_model():
+                return tf.keras.models.load_model('skin_cancer_cnn_model.keras')
+            try:
+                model = load_my_model()
+            except Exception as e:
+                st.error(f"Model Error: {e}")
+                st.stop()
+
+            with st.spinner("DermaLens is scanning..."):
+                prediction = model.predict(img_array)[0][0]
+
+            st.divider()
             if prediction > 0.5:
                 conf = prediction * 100
-                st.markdown(f"""
-                <div class="result-card" style="border-top: 5px solid #EF4444;">
-                    <div style="font-size:40px;">⚠️</div>
-                    <h3 style="color:#EF4444; margin:5px 0;">Malignant</h3>
-                    <p style="font-size:13px; color:#64748B;">Confidence: <b>{conf:.2f}%</b></p>
-                </div>
-                """, unsafe_allow_html=True)
+                st.error(f"### ⚠️ Result: MALIGNANT")
                 st.progress(float(prediction))
-                st.error("High Risk Detected. Please consult a Dermatologist immediately.")
+                st.write(f"**Confidence:** {conf:.2f}%  |  **Risk Level:** High")
+                st.warning("Please visit a Dermatologist immediately.")
+                report_text = f"DermaLens AI Report\nResult: Malignant\nConfidence: {conf:.2f}%\nAdvice: Consult Dermatologist"
             else:
                 conf = (1 - prediction) * 100
-                st.markdown(f"""
-                <div class="result-card" style="border-top: 5px solid #22C55E;">
-                    <div style="font-size:40px;">✅</div>
-                    <h3 style="color:#22C55E; margin:5px 0;">Benign</h3>
-                    <p style="font-size:13px; color:#64748B;">Confidence: <b>{conf:.2f}%</b></p>
-                </div>
-                """, unsafe_allow_html=True)
+                st.success(f"### ✅ Result: BENIGN")
                 st.progress(float(1 - prediction))
-                st.success("Low Risk. It looks Benign. Still consult a doctor for confirmation.")
+                st.write(f"**Confidence:** {conf:.2f}%  |  **Risk Level:** Low")
+                st.info("Looks Benign. Still get a doctor checkup for confirmation.")
+                report_text = f"DermaLens AI Report\nResult: Benign\nConfidence: {conf:.2f}%\nAdvice: Routine Checkup"
 
-st.markdown("""
-<div style="background:#FFFBEB; padding:12px; border-radius:12px; margin-top:20px; text-align:center; font-size:12px; color:#92400E;">
-⚠️ <b>Disclaimer:</b> This tool is for educational purposes only. Please consult a Dermatologist for final diagnosis.
-</div>
-<div class="footer"><b>SkinGuard AI</b> | Final Year Project • Powered by CNN</div>
-""", unsafe_allow_html=True)
+            # --- EXTRA BUTTON: DOWNLOAD REPORT ---
+            if download_report or True:
+                st.download_button("⬇️ Download Full Report (.txt)", data=report_text, file_name="DermaLens_Report.txt", mime="text/plain")
+
+st.markdown('<div class="footer">DermaLens AI • Early Detection Saves Lives • Final Year Project</div>', unsafe_allow_html=True)
