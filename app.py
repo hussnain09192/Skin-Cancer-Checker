@@ -6,7 +6,6 @@ import io
 import requests
 from datetime import datetime
 
-# --- REPORTLAB FOR PROFESSIONAL PDF ---
 from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
 from reportlab.lib.units import mm
@@ -19,7 +18,6 @@ DEVELOPER_NAME = "Hussnain Khalid"
 
 st.set_page_config(page_title=f"SkinSense AI - by {DEVELOPER_NAME}", page_icon="👁️", layout="centered")
 
-# --- SESSION STATE ---
 if "uploader_key" not in st.session_state:
     st.session_state.uploader_key = 0
 if "use_sample" not in st.session_state:
@@ -34,8 +32,6 @@ if "conf" not in st.session_state:
     st.session_state.conf = 0
 if "risk" not in st.session_state:
     st.session_state.risk = ""
-if "want_pdf" not in st.session_state:
-    st.session_state.want_pdf = False
 
 SAMPLE_URL = "https://upload.wikimedia.org/wikipedia/commons/5/5d/Melanoma_in_situ.jpg"
 
@@ -47,14 +43,11 @@ def load_sample_image():
         img = Image.new("RGB", (400, 400), color=(180, 120, 90))
         return img
 
-# =====================================================
-# --- PROFESSIONAL PDF REPORT - BILKUL REAL JESI ---
-# =====================================================
+# --- PROFESSIONAL PDF - REAL JESI ---
 def create_pdf_report(result, confidence, risk):
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=A4, topMargin=0, bottomMargin=0, leftMargin=0, rightMargin=0)
     story = []
-
     TEAL = HexColor("#0F766E")
     TEAL_DARK = HexColor("#020617")
     GREEN = HexColor("#16A34A")
@@ -65,7 +58,6 @@ def create_pdf_report(result, confidence, risk):
     GREY = HexColor("#64748B")
     LIGHT_GREY = HexColor("#F1F5F9")
     BLACK = HexColor("#0F172A")
-
     is_malignant = result == "Malignant"
     main_color = RED if is_malignant else GREEN
     main_bg = RED_BG if is_malignant else GREEN_BG
@@ -74,7 +66,6 @@ def create_pdf_report(result, confidence, risk):
     advice = "Please consult a Dermatologist immediately. Early treatment is very important." if is_malignant else "Good News! It looks Benign. Still consult a doctor once for confirmation."
     date_str = datetime.now().strftime('%d %B %Y, %I:%M %p')
     report_id = f"SS-{datetime.now().strftime('%Y%m%d%H%M')}"
-
     sTitle = ParagraphStyle('Title', fontName='Helvetica-Bold', fontSize=24, leading=28, textColor=colors.white, alignment=TA_CENTER)
     sSub = ParagraphStyle('Sub', fontName='Helvetica', fontSize=10, leading=13, textColor=HexColor("#CCFBF1"), alignment=TA_CENTER)
     sHeadSmall = ParagraphStyle('HeadSmall', fontName='Helvetica-Bold', fontSize=8, leading=10, textColor=colors.white, alignment=TA_CENTER)
@@ -86,8 +77,6 @@ def create_pdf_report(result, confidence, risk):
     sRec = ParagraphStyle('Rec', fontName='Helvetica', fontSize=10.5, leading=15, textColor=BLACK, alignment=TA_LEFT)
     sFooter = ParagraphStyle('Footer', fontName='Helvetica', fontSize=8, leading=10, textColor=colors.white, alignment=TA_CENTER)
     sDisc = ParagraphStyle('Disc', fontName='Helvetica-Oblique', fontSize=8, leading=11, textColor=GREY, alignment=TA_CENTER)
-
-    # 1. HEADER
     header_data = [
         [Paragraph("👁️ SkinSense AI", sTitle)],
         [Paragraph("Early Skin Cancer Detection &nbsp;|&nbsp; Benign vs Malignant &nbsp;|&nbsp; Powered by Deep Learning", sSub)],
@@ -104,8 +93,6 @@ def create_pdf_report(result, confidence, risk):
     ]))
     story.append(header_table)
     story.append(Spacer(1, 8*mm))
-
-    # 2. REPORT INFO BAR - LABELS KE SAATH
     info_data = [
         [Paragraph("<b>Report Date</b>", sLabel), Paragraph(f"<b>{date_str}</b>", sValue),
          Paragraph("<b>Report ID</b>", sLabel), Paragraph(f"<b>{report_id}</b>", sValue)],
@@ -124,8 +111,6 @@ def create_pdf_report(result, confidence, risk):
     ]))
     story.append(info_table)
     story.append(Spacer(1, 7*mm))
-
-    # 3. RESULT BOX
     story.append(Paragraph("PREDICTION RESULT", sSection))
     result_data = [
         [Paragraph(f"{result_icon} &nbsp; {result_text}", sResult)],
@@ -143,8 +128,6 @@ def create_pdf_report(result, confidence, risk):
     ]))
     story.append(result_table)
     story.append(Spacer(1, 6*mm))
-
-    # 4. DETAILED ANALYSIS TABLE
     story.append(Paragraph("DETAILED ANALYSIS", sSection))
     filled = int(confidence / 5)
     bar_text = "█" * filled + "░" * (20 - filled)
@@ -169,8 +152,6 @@ def create_pdf_report(result, confidence, risk):
     ]))
     story.append(detail_table)
     story.append(Spacer(1, 6*mm))
-
-    # 5. RECOMMENDATION BOX
     story.append(Paragraph("DOCTOR'S RECOMMENDATION", sSection))
     rec_data = [[Paragraph(f"<b>💡 Recommendation:</b> {advice}", sRec)]]
     rec_table = Table(rec_data, colWidths=[170*mm])
@@ -185,13 +166,10 @@ def create_pdf_report(result, confidence, risk):
     ]))
     story.append(rec_table)
     story.append(Spacer(1, 8*mm))
-
     story.append(HRFlowable(width="100%", thickness=0.5, color=HexColor("#E2E8F0")))
     story.append(Spacer(1, 4*mm))
     story.append(Paragraph("⚠️ Disclaimer: This report is generated by AI for educational purposes only. It is NOT a final medical diagnosis. Please consult a qualified Dermatologist for proper examination.", sDisc))
     story.append(Spacer(1, 6*mm))
-
-    # 6. FOOTER
     footer_data = [[Paragraph(f"SkinSense AI &nbsp;|&nbsp; Developed by <b>{DEVELOPER_NAME}</b> &nbsp;|&nbsp; Early Detection Saves Lives", sFooter)]]
     footer_table = Table(footer_data, colWidths=[210*mm])
     footer_table.setStyle(TableStyle([
@@ -200,119 +178,33 @@ def create_pdf_report(result, confidence, risk):
         ('BOTTOMPADDING', (0,0), (-1,-1), 10),
     ]))
     story.append(footer_table)
-
     doc.build(story)
     buffer.seek(0)
     return buffer
 
-# --- APP DESIGN ---
 st.markdown("""
 <style>
     .main { background-color: #F8FAFC; }
-    .header-box {
-        background: linear-gradient(135deg, #020617 0%, #0F766E 60%, #14B8A6 100%);
-        padding: 32px 25px 26px 25px;
-        border-radius: 22px;
-        color: white;
-        text-align: center;
-        box-shadow: 0 15px 30px rgba(0,0,0,0.22);
-        margin-bottom: 18px;
-    }
-    .logo-circle {
-        background: white;
-        width: 82px; height: 82px;
-        border-radius: 50%;
-        display: flex; align-items: center; justify-content: center;
-        margin: 0 auto 12px auto;
-        font-size: 42px;
-    }
+    .header-box { background: linear-gradient(135deg, #020617 0%, #0F766E 60%, #14B8A6 100%); padding: 32px 25px 26px 25px; border-radius: 22px; color: white; text-align: center; box-shadow: 0 15px 30px rgba(0,0,0,0.22); margin-bottom: 18px; }
+    .logo-circle { background: white; width: 82px; height: 82px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px auto; font-size: 42px; }
     .header-box h1 { color: white !important; font-size: 40px; margin: 0; }
     .header-box h1 span { color: #5EEAD4; }
     .header-box p { color: #CCFBF1 !important; font-size: 15px; margin-top: 6px; }
     .badge-green { background: #22C55E; color: white; padding: 7px 16px; border-radius: 20px; font-size: 12px; font-weight: 700; }
     .badge-white { background: rgba(255,255,255,0.16); color: white; padding: 7px 16px; border-radius: 20px; font-size: 12px; font-weight: 600; border: 1px solid rgba(255,255,255,0.3); }
-    .dev-badge {
-        background: #F59E0B; color: #1A1A1A;
-        padding: 8px 18px; border-radius: 50px;
-        font-size: 13px; font-weight: 800;
-        display: inline-block; margin-top: 14px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-    }
-    .feature-box {
-        background: white;
-        padding: 18px 6px;
-        border-radius: 16px;
-        text-align: center;
-        border: 1px solid #E2E8F0;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-        min-height: 115px;
-    }
+    .dev-badge { background: #F59E0B; color: #1A1A1A; padding: 8px 18px; border-radius: 50px; font-size: 13px; font-weight: 800; display: inline-block; margin-top: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+    .feature-box { background: white; padding: 18px 6px; border-radius: 16px; text-align: center; border: 1px solid #E2E8F0; box-shadow: 0 4px 12px rgba(0,0,0,0.05); min-height: 115px; }
     .feature-box b { font-size: 14px; color: #0F172A; }
     .feature-box p { font-size: 11px; color: #64748B; margin: 3px 0 0 0; line-height: 1.3; }
-    [data-testid="stFileUploader"] {
-        background: white;
-        border: 2.5px dashed #14B8A6 !important;
-        border-radius: 18px !important;
-        padding: 18px 18px 14px 18px !important;
-        margin-top: 18px;
-    }
-    [data-testid="stFileUploaderDropzone"] button {
-        background: #0F766E !important;
-        color: white !important;
-        border-radius: 14px !important;
-        padding: 14px 20px !important;
-        font-weight: 700 !important;
-        font-size: 16px !important;
-        border: none !important;
-        width: 100% !important;
-    }
-    [data-testid="stFileUploader"] [data-testid="stFileUploaderFile"] {
-        display: flex !important;
-        align-items: center !important;
-        gap: 8px !important;
-        width: 100% !important;
-    }
-    [data-testid="stFileUploader"] [data-testid="stFileUploaderFile"] button {
-        width: auto !important;
-        min-width: 36px !important;
-        height: 36px !important;
-        padding: 0px 8px !important;
-        border-radius: 50% !important;
-        flex-shrink: 0 !important;
-        background: #F1F5F9 !important;
-        color: #0F172A !important;
-        border: 1px solid #E2E8F0 !important;
-    }
-    button[data-testid="stFileUploaderDeleteBtn"] {
-        width: 36px !important;
-        min-width: 36px !important;
-        background: #FEE2E2 !important;
-        color: #DC2626 !important;
-    }
-    [data-testid="stImage"] img {
-        width: 100% !important;
-        max-height: 420px !important;
-        object-fit: contain !important;
-        border-radius: 14px;
-        background: #F1F5F9;
-        padding: 10px;
-    }
-    .image-box {
-        background: white;
-        border: 2px solid #CCFBF1;
-        border-radius: 18px;
-        padding: 14px;
-        margin-top: 14px;
-    }
-    .stButton > button {
-        border-radius: 50px !important; font-weight: 700 !important;
-        padding: 14px 20px !important; font-size: 16px !important;
-        border: none !important; box-shadow: 0 8px 18px rgba(0,0,0,0.15) !important;
-    }
-    div[data-testid="stButton"] button[kind="primary"] {
-        background: linear-gradient(135deg, #0F766E, #14B8A6) !important;
-        color: white !important; font-size: 19px !important; padding: 16px !important; width: 100%;
-    }
+    [data-testid="stFileUploader"] { background: white; border: 2.5px dashed #14B8A6 !important; border-radius: 18px !important; padding: 18px 18px 14px 18px !important; margin-top: 18px; }
+    [data-testid="stFileUploaderDropzone"] button { background: #0F766E !important; color: white !important; border-radius: 14px !important; padding: 14px 20px !important; font-weight: 700 !important; font-size: 16px !important; border: none !important; width: 100% !important; }
+    [data-testid="stFileUploader"] [data-testid="stFileUploaderFile"] { display: flex !important; align-items: center !important; gap: 8px !important; width: 100% !important; }
+    [data-testid="stFileUploader"] [data-testid="stFileUploaderFile"] button { width: auto !important; min-width: 36px !important; height: 36px !important; padding: 0px 8px !important; border-radius: 50% !important; flex-shrink: 0 !important; background: #F1F5F9 !important; color: #0F172A !important; border: 1px solid #E2E8F0 !important; }
+    button[data-testid="stFileUploaderDeleteBtn"] { width: 36px !important; min-width: 36px !important; background: #FEE2E2 !important; color: #DC2626 !important; }
+    [data-testid="stImage"] img { width: 100% !important; max-height: 420px !important; object-fit: contain !important; border-radius: 14px; background: #F1F5F9; padding: 10px; }
+    .image-box { background: white; border: 2px solid #CCFBF1; border-radius: 18px; padding: 14px; margin-top: 14px; }
+    .stButton > button { border-radius: 50px !important; font-weight: 700 !important; padding: 14px 20px !important; font-size: 16px !important; border: none !important; box-shadow: 0 8px 18px rgba(0,0,0,0.15) !important; }
+    div[data-testid="stButton"] button[kind="primary"] { background: linear-gradient(135deg, #0F766E, #14B8A6) !important; color: white !important; font-size: 19px !important; padding: 16px !important; width: 100%; }
     .footer { text-align: center; color: #94A3B8; font-size: 12px; margin-top: 22px; }
     .footer b { color: #0F766E; font-size: 14px; }
 </style>
@@ -360,14 +252,12 @@ with eb1:
         st.session_state.use_sample = True
         st.session_state.show_how = False
         st.session_state.analysis_done = False
-        st.session_state.want_pdf = False
         st.rerun()
 with eb2:
     if st.button("🗑️ Clear Image", use_container_width=True):
         st.session_state.use_sample = False
         st.session_state.show_how = False
         st.session_state.analysis_done = False
-        st.session_state.want_pdf = False
         st.session_state.uploader_key += 1
         st.rerun()
 with eb3:
@@ -380,7 +270,7 @@ if st.session_state.show_how:
     **How It Works - 3 Easy Steps:**
     1️⃣ **Upload Image** - Apni skin wali tasveer upload karo ya Try Sample dabao
     2️⃣ **Analyze Now** - AI tumhari tasveer ko check karega
-    3️⃣ **PDF (Optional)** - Agar chaho to Generate PDF dabao, warna nahi
+    3️⃣ **Download PDF** - Agar chaho to Download PDF dabao, warna nahi
     """)
 
 image = None
@@ -416,9 +306,9 @@ if image is not None:
             st.session_state.risk = "Low"
             st.session_state.pred_value = float(1 - prediction)
         st.session_state.analysis_done = True
-        st.session_state.want_pdf = False
         st.rerun()
 
+    # --- AB SIRF EK HI BUTTON HOGA ---
     if st.session_state.analysis_done:
         st.markdown("---")
         result = st.session_state.result
@@ -437,15 +327,9 @@ if image is not None:
             st.info("Good news! It looks Benign. Please still consult a doctor for confirmation.")
 
         st.markdown("---")
-        if not st.session_state.want_pdf:
-            if st.button("📄 Generate PDF Report", use_container_width=True):
-                st.session_state.want_pdf = True
-                st.rerun()
-
-        if st.session_state.want_pdf:
-            pdf_buffer = create_pdf_report(result, conf, risk)
-            st.success("PDF Ready hai! Neeche se download karo 👇")
-            st.download_button("⬇️ Download PDF Report", data=pdf_buffer, file_name="SkinSense_Report.pdf", mime="application/pdf", use_container_width=True)
+        # SIRF YE EK BUTTON - GENERATE WALA KHATAM
+        pdf_buffer = create_pdf_report(result, conf, risk)
+        st.download_button("⬇️ Download PDF Report", data=pdf_buffer, file_name="SkinSense_Report.pdf", mime="application/pdf", use_container_width=True)
 
 st.markdown(f"""
 <div style="background:#FFFBEB; padding:12px; border-radius:12px; margin-top:20px; text-align:center; font-size:12px; color:#92400E;">
