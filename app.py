@@ -3,12 +3,31 @@ import tensorflow as tf
 from PIL import Image
 import numpy as np
 import io
+import requests
 from datetime import datetime
 
-# --- 👇 TUMHARA NAAM LAG GAYA 👇 ---
 DEVELOPER_NAME = "Hussnain Khalid"
 
 st.set_page_config(page_title=f"SkinSense AI - by {DEVELOPER_NAME}", page_icon="👁️", layout="centered")
+
+# --- SESSION STATE FOR CLEAR / SAMPLE / HOW IT WORKS ---
+if "uploader_key" not in st.session_state:
+    st.session_state.uploader_key = 0
+if "use_sample" not in st.session_state:
+    st.session_state.use_sample = False
+if "show_how" not in st.session_state:
+    st.session_state.show_how = False
+
+SAMPLE_URL = "https://upload.wikimedia.org/wikipedia/commons/5/5d/Melanoma_in_situ.jpg"
+
+def load_sample_image():
+    try:
+        r = requests.get(SAMPLE_URL, timeout=10)
+        return Image.open(io.BytesIO(r.content)).convert("RGB")
+    except:
+        # Agar internet na ho to ek dummy sample bana do
+        img = Image.new("RGB", (400, 400), color=(180, 120, 90))
+        return img
 
 # --- PDF WITHOUT ANY LIBRARY ---
 def create_pdf_report(result, confidence, risk):
@@ -109,29 +128,16 @@ st.markdown("""
     .feature-box b { font-size: 14px; color: #0F172A; }
     .feature-box p { font-size: 11px; color: #64748B; margin: 3px 0 0 0; line-height: 1.3; }
 
-    /* --- UPLOAD BOX FIX - BUTTON AB POORA ANDAR AAYEGA --- */
+    /* --- UPLOAD BOX FIX --- */
     [data-testid="stFileUploader"] {
         background: white;
         border: 2.5px dashed #14B8A6 !important;
         border-radius: 18px !important;
-        padding: 22px 22px 18px 22px !important;
+        padding: 18px 18px 14px 18px !important;
         margin-top: 18px;
     }
-    [data-testid="stFileUploader"] section {
-        border: none !important;
-        padding: 0 !important;
-        display: flex !important;
-        flex-direction: column !important;
-        align-items: stretch !important;
-        gap: 10px !important;
-    }
-    [data-testid="stFileUploader"] section > div {
-        width: 100% !important;
-        max-width: 100% !important;
-        text-align: center !important;
-    }
-    /* UPLOAD BUTTON - FULL WIDTH INSIDE BOX */
-    [data-testid="stFileUploader"] button {
+    /* Sirf Browse Files wala button full width hoga */
+    [data-testid="stFileUploaderDropzone"] button {
         background: #0F766E !important;
         color: white !important;
         border-radius: 14px !important;
@@ -140,22 +146,31 @@ st.markdown("""
         font-size: 16px !important;
         border: none !important;
         width: 100% !important;
-        max-width: 100% !important;
     }
-    [data-testid="stFileUploader"] small {
-        text-align: center !important;
+    /* FIX: Upload hone ke baad wali file row - Cross aur Plus alag alag rahenge */
+    [data-testid="stFileUploader"] [data-testid="stFileUploaderFile"] {
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
         width: 100% !important;
-        display: block !important;
-        font-size: 12px !important;
-        color: #64748B !important;
     }
-    [data-testid="stFileUploader"] label {
-        text-align: center !important;
-        width: 100% !important;
-        justify-content: center !important;
-        font-size: 16px !important;
-        font-weight: 700 !important;
+    [data-testid="stFileUploader"] [data-testid="stFileUploaderFile"] button {
+        width: auto !important;
+        min-width: 36px !important;
+        height: 36px !important;
+        padding: 0px 8px !important;
+        border-radius: 50% !important;
+        flex-shrink: 0 !important;
+        background: #F1F5F9 !important;
         color: #0F172A !important;
+        border: 1px solid #E2E8F0 !important;
+    }
+    /* Delete (X) button alag se */
+    button[data-testid="stFileUploaderDeleteBtn"] {
+        width: 36px !important;
+        min-width: 36px !important;
+        background: #FEE2E2 !important;
+        color: #DC2626 !important;
     }
 
     [data-testid="stImage"] img {
@@ -221,27 +236,48 @@ except Exception as e:
     st.error(f"Error loading model: {e}")
     st.stop()
 
-uploaded_file = st.file_uploader("📸 Upload Skin Lesion Image", type=["jpg", "jpeg", "png"], help="Upload a clear, close-up image for best accuracy")
+uploaded_file = st.file_uploader("📸 Upload Skin Lesion Image", type=["jpg", "jpeg", "png"], key=f"uploader_{st.session_state.uploader_key}")
 
+# --- 3 BUTTONS - AB SACH MEIN KAAM KARENGE ---
 eb1, eb2, eb3 = st.columns(3)
 with eb1:
-    sample_btn = st.button("🖼️ Try Sample Image", use_container_width=True)
+    if st.button("🖼️ Try Sample Image", use_container_width=True):
+        st.session_state.use_sample = True
+        st.session_state.show_how = False
+        st.rerun()
 with eb2:
-    clear_btn = st.button("🗑️ Clear Image", use_container_width=True)
+    if st.button("🗑️ Clear Image", use_container_width=True):
+        st.session_state.use_sample = False
+        st.session_state.show_how = False
+        st.session_state.uploader_key += 1
+        st.rerun()
 with eb3:
-    info_btn = st.button("ℹ️ How It Works", use_container_width=True)
+    if st.button("ℹ️ How It Works", use_container_width=True):
+        st.session_state.show_how = not st.session_state.show_how
+        st.rerun()
 
-if clear_btn:
-    st.rerun()
-if info_btn:
-    st.info("1. Upload Image -> 2. Click Analyze -> 3. Get Result + Download PDF Report")
-if sample_btn:
-    st.info("Please upload your own image to test.")
+if st.session_state.show_how:
+    st.info("""
+    **How It Works - 3 Easy Steps:**
+    1️⃣ **Upload Image** - Apni skin wali tasveer upload karo ya Try Sample dabao
+    2️⃣ **Analyze Now** - AI tumhari tasveer ko check karega
+    3️⃣ **Get Result + PDF** - Benign ya Malignant ka result + PDF Report download karo
+    """)
 
+# --- IMAGE DECIDE KARO: UPLOADED YA SAMPLE ---
+image = None
+image_source = ""
 if uploaded_file is not None:
     image = Image.open(uploaded_file).convert("RGB")
+    image_source = "Your Uploaded Image"
+    st.session_state.use_sample = False
+elif st.session_state.use_sample:
+    image = load_sample_image()
+    image_source = "Sample Image - Try Karne Ke Liye"
+
+if image is not None:
     st.markdown('<div class="image-box">', unsafe_allow_html=True)
-    st.image(image, caption='Your Uploaded Image - Full View', use_container_width=True)
+    st.image(image, caption=f'{image_source} - Full View', use_container_width=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
     resized = image.resize((128, 128))
